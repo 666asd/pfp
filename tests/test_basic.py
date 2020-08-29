@@ -14,6 +14,7 @@ import pfp.utils
 
 import utils
 
+
 class TestBasic(utils.PfpTestCase):
     def setUp(self):
         pfp.fields.NumberBase.endian = pfp.fields.LITTLE_ENDIAN
@@ -39,13 +40,13 @@ class TestBasic(utils.PfpTestCase):
             stdout="",
             printf=False,
         )
-    
+
     def test_single_decl_parse(self):
         dom = self._test_parse_build(
             "\x41",
             """
                 char a;
-            """
+            """,
         )
 
     def test_basic_parse_with_comments(self):
@@ -60,7 +61,7 @@ class TestBasic(utils.PfpTestCase):
                     char c;
                     char d;
                 } data; /*haha*/
-            """
+            """,
         )
 
     def test_basic_parse(self):
@@ -73,9 +74,9 @@ class TestBasic(utils.PfpTestCase):
                     char c;
                     char d;
                 } data;
-            """
+            """,
         )
-    
+
     def test_nested_basic_parse(self):
         dom = self._test_parse_build(
             "\x00\x01\x02\x03",
@@ -89,9 +90,9 @@ class TestBasic(utils.PfpTestCase):
                         char b;
                     } nested;
                 } data;
-            """
+            """,
         )
-    
+
     def test_typedef_basic_parse(self):
         dom = self._test_parse_build(
             "\xff\x00\x00\xff",
@@ -101,19 +102,19 @@ class TestBasic(utils.PfpTestCase):
                 typedef unsigned short BLAH;
                 BLAH a;
                 short b;
-            """
+            """,
         )
-        self.assertEqual(dom.a, 0xff00)
-        self.assertEqual(dom.b, 0xff)
-    
+        self.assertEqual(dom.a, 0xFF00)
+        self.assertEqual(dom.b, 0xFF)
+
     def test_local(self):
         dom = self._test_parse_build(
             "",
             """
                 local int i;
-            """
+            """,
         )
-    
+
     def test_local_field_precedence1(self):
         dom = self._test_parse_build(
             "\x01",
@@ -124,7 +125,7 @@ class TestBasic(utils.PfpTestCase):
                     Printf("%d", size);
                 } test;
             """,
-            stdout="1"
+            stdout="1",
         )
 
     def test_local_field_precedence2(self):
@@ -138,15 +139,15 @@ class TestBasic(utils.PfpTestCase):
                     Printf("%d", size);
                 } test;
             """,
-            stdout="0"
+            stdout="0",
         )
-    
+
     def test_local_assignment_int(self):
         dom = self._test_parse_build(
             "",
             """
                 local int i = 10;
-            """
+            """,
         )
 
     def test_local_assignment_char(self):
@@ -154,7 +155,7 @@ class TestBasic(utils.PfpTestCase):
             "",
             """
                 local char i = 'A';
-            """
+            """,
         )
 
     def test_local_assignment_float(self):
@@ -162,7 +163,7 @@ class TestBasic(utils.PfpTestCase):
             "",
             """
                 local float i = 0.5f;
-            """
+            """,
         )
 
     def test_local_assignment_double(self):
@@ -170,7 +171,7 @@ class TestBasic(utils.PfpTestCase):
             "",
             """
                 local double i = 0.5;
-            """
+            """,
         )
 
     def test_local_assignment_long(self):
@@ -178,7 +179,7 @@ class TestBasic(utils.PfpTestCase):
             "",
             """
                 local long i = 555l;
-            """
+            """,
         )
 
     def test_local_assignment_string(self):
@@ -186,7 +187,7 @@ class TestBasic(utils.PfpTestCase):
             "",
             """
                 local string i = "hello";
-            """
+            """,
         )
 
     def test_local_binary_arithmetic(self):
@@ -208,9 +209,197 @@ class TestBasic(utils.PfpTestCase):
                 k = i && j;
                 k = i << j;
                 k = i >> j;
-            """
+            """,
         )
-    
+
+    def test_add_operator(self):
+        dom = self._test_parse_build(
+            "",
+            """
+                local int i = 2;
+                local int j = 3;
+                local int k = i + j;
+                Printf("%d", k);
+            """,
+            stdout="5",
+        )
+
+    def test_minus_operator(self):
+        dom = self._test_parse_build(
+            "",
+            """
+                local int i = 2;
+                local int j = 3;
+                local int k = i - j;
+                Printf("%d", k);
+            """,
+            stdout="-1",
+        )
+
+    def test_mul_operator(self):
+        dom = self._test_parse_build(
+            "",
+            """
+                local int i = 2;
+                local int j = 3;
+                local int k = i * j;
+                Printf("%d", k);
+            """,
+            stdout="6",
+        )
+
+    def test_div_operator(self):
+        dom = self._test_parse_build(
+            "",
+            """
+                local int i = 2;
+                local int j = 6;
+                local int k = j / i;
+                Printf("%d", k);
+            """,
+            stdout="3",
+        )
+
+    def test_mod_operator(self):
+        dom = self._test_parse_build(
+            "",
+            """
+                local int i = 5;
+                local int j = 7;
+                local int k = j % i;
+                Printf("%d", k);
+            """,
+            stdout="2",
+        )
+
+    def test_xor_operator(self):
+        dom = self._test_parse_build(
+            "",
+            """
+                local int i = 6;
+                local int j = 3;
+                local int k = j ^ i;
+                Printf("%d", k);
+            """,
+            stdout="5",
+        )
+
+    def test_and_operator(self):
+        dom = self._test_parse_build(
+            "",
+            """
+                local int i = 56; // 0b111000
+                local int j = 25; // 0b011001
+                local int k = j & i;
+                Printf("%d", k);
+            """,
+            stdout=str(int("011000", 2)),
+        )
+
+    def test_or_operator(self):
+        dom = self._test_parse_build(
+            "",
+            """
+                local int i = 56; // 0b111000
+                local int j = 25; // 0b011001
+                local int k = j | i;
+                Printf("%d", k);
+            """,
+            stdout=str(int("111001", 2)),
+        )
+
+    def test_logical_or_operator(self):
+        dom = self._test_parse_build(
+            "",
+            """
+                local int i = 0;
+                local int j = 25;
+                local int k = j || i;
+                Printf("%d", k);
+            """,
+            stdout="1",
+        )
+
+    def test_logical_or_operator2(self):
+        dom = self._test_parse_build(
+            "",
+            """
+                Printf(
+                    "%d,%d,%d,%d",
+                    0 || 0,
+                    0 || 1,
+                    1 || 0,
+                    1 || 1
+                );
+            """,
+            stdout="0,1,1,1",
+        )
+
+    def test_logical_or_operator_lazy_resolve(self):
+        """Test that logic or operations are lazily resolved
+        """
+        dom = self._test_parse_build(
+            "",
+            """
+                local int a = 1;
+                if (a || DOES_NOT_EXIST) {
+                    Printf("Short circuit power!");
+                }
+            """,
+            stdout="Short circuit power!",
+        )
+
+    def test_logical_and_operator(self):
+        dom = self._test_parse_build(
+            "",
+            """
+                local int i = 0;
+                local int j = 25;
+                local int k = j && i;
+                Printf("%d", k);
+            """,
+            stdout="0",
+        )
+
+    def test_logical_and_operator2(self):
+        dom = self._test_parse_build(
+            "",
+            """
+                Printf(
+                    "%d,%d,%d,%d",
+                    0 && 0,
+                    0 && 1,
+                    1 && 0,
+                    1 && 1
+                );
+            """,
+            stdout="0,0,0,1",
+        )
+
+    def test_logical_shl_operator(self):
+        dom = self._test_parse_build(
+            "",
+            """
+                local int i = 3;
+                local int j = 4;
+                local int k = i << j;
+                Printf("%d", k);
+            """,
+            stdout="48",
+        )
+
+    def test_logical_shr_operator(self):
+        dom = self._test_parse_build(
+            "",
+            """
+                local int i = 0x17000;
+                local int j = 4;
+                local int k = i >> j;
+                Printf("%d", k);
+            """,
+            stdout="5888",
+        )
+
     def test_local_accessible_via_this(self):
         dom = self._test_parse_build(
             "\x01\x02\x03\x04",
@@ -221,10 +410,9 @@ class TestBasic(utils.PfpTestCase):
                     Printf("%d", test);
                 } blah;
             """,
-            verify=False,
-            stdout="{a},{a}".format(a=str(0x04030201))
+            stdout="{a},{a}".format(a=str(0x04030201)),
         )
-    
+
     def test_struct_field_declared_in_function(self):
         dom = self._test_parse_build(
             "\x01\x02\x03\x04",
@@ -239,10 +427,9 @@ class TestBasic(utils.PfpTestCase):
                     Printf("%d", test);
                 } blah;
             """,
-            verify=False,
-            stdout="{a},{a}".format(a=str(0x04030201))
+            stdout="{a},{a}".format(a=str(0x04030201)),
         )
-    
+
     def test_add(self):
         dom = self._test_parse_build(
             "ab",
@@ -254,7 +441,7 @@ class TestBasic(utils.PfpTestCase):
                 i = FTell() + j;
                 Printf("%d", i);
             """,
-            stdout="5"
+            stdout="5",
         )
 
     def test_unary_arithmetic(self):
@@ -266,9 +453,9 @@ class TestBasic(utils.PfpTestCase):
                 i--;
                 ~i;
                 !i;
-            """
+            """,
         )
-    
+
     def test_unary_double_plus_minus1(self):
         dom = self._test_parse_build(
             "",
@@ -277,7 +464,7 @@ class TestBasic(utils.PfpTestCase):
                 local int b = ++a; // 1
                 local int c = a++; // 1
                 local int d = a; // 2
-            """
+            """,
         )
         # also, locals are now accessible via structs! easier testing FTW!
         # TODO stop checking stdout and check the actual local values in
@@ -286,7 +473,7 @@ class TestBasic(utils.PfpTestCase):
         self.assertEqual(dom.b, 1)
         self.assertEqual(dom.c, 1)
         self.assertEqual(dom.d, 2)
-    
+
     def test_unary_sizeof_basic(self):
         dom = self._test_parse_build(
             "abcd",
@@ -294,9 +481,9 @@ class TestBasic(utils.PfpTestCase):
                 int some_int;
                 Printf("%d", sizeof(some_int));
             """,
-            stdout="4"
+            stdout="4",
         )
-    
+
     def test_unary_sizeof_struct(self):
         dom = self._test_parse_build(
             "abcde",
@@ -307,18 +494,18 @@ class TestBasic(utils.PfpTestCase):
                 } blah;
                 Printf("%d", sizeof(blah));
             """,
-            stdout="5"
+            stdout="5",
         )
-    
+
     def test_unary_sizeof_atomic_type(self):
         dom = self._test_parse_build(
             "",
             """
                 Printf("%d", sizeof(int));
             """,
-            stdout="4"
+            stdout="4",
         )
-    
+
     def test_unary_sizeof_atomic_type2(self):
         dom = self._test_parse_build(
             "",
@@ -326,9 +513,9 @@ class TestBasic(utils.PfpTestCase):
                 typedef unsigned int NEW_TYPE;
                 Printf("%d", sizeof(NEW_TYPE));
             """,
-            stdout="4"
+            stdout="4",
         )
-    
+
     def test_unary_exists(self):
         dom = self._test_parse_build(
             "\x00",
@@ -346,9 +533,11 @@ class TestBasic(utils.PfpTestCase):
                     Printf("False");
                 }
             """,
-            stdout="FalseTrue"
+            # 010 verified output: FalseFalse
+            # this output will change when #87 is fixed
+            stdout="FalseTrue",
         )
-    
+
     def test_unary_function_exists(self):
         dom = self._test_parse_build(
             "",
@@ -369,9 +558,11 @@ class TestBasic(utils.PfpTestCase):
                     Printf("False");
                 }
             """,
-            stdout="FalseTrue"
+            # 010 verified output: TrueTrue
+            # this output will change when #87 is fixed
+            stdout="TrueTrue",
         )
-    
+
     def test_unary_startof(self):
         dom = self._test_parse_build(
             "\x01\x02\x03",
@@ -387,9 +578,9 @@ class TestBasic(utils.PfpTestCase):
                 Printf("%d,", startof(this.b));
                 Printf("%d", startof(this.c));
             """,
-            stdout="0,1,2,0,1,2"
+            stdout="0,1,2,0,1,2",
         )
-    
+
     def test_unary_parentof(self):
         dom = self._test_parse_build(
             "\x01\x02\x03",
@@ -415,9 +606,9 @@ class TestBasic(utils.PfpTestCase):
                 Printf("%d", (parentof(parentof(parentof(b.b.b.a)))).a); // 1
                 Printf("%d", (parentof (parentof (parentof b.b.b.a))).a); // 1
             """,
-            stdout="12332211"
+            stdout="12332211",
         )
-    
+
     def test_comparisons(self):
         dom = self._test_parse_build(
             "",
@@ -429,9 +620,9 @@ class TestBasic(utils.PfpTestCase):
                 i <= 10;
                 i != 10;
                 i == 10;
-            """
+            """,
         )
-    
+
     # is this even what you call this?
     def test_binary_assignment(self):
         dom = self._test_parse_build(
@@ -447,8 +638,9 @@ class TestBasic(utils.PfpTestCase):
                 i &= 10;
                 i <<= 10;
                 i >>= 10;
-            """
+            """,
         )
+
 
 class TestByRef(utils.PfpTestCase):
     def setUp(self):
@@ -456,7 +648,7 @@ class TestByRef(utils.PfpTestCase):
 
     def tearDown(self):
         pass
-    
+
     def test_non_byref_native_type(self):
         dom = self._test_parse_build(
             "",
@@ -468,9 +660,9 @@ class TestByRef(utils.PfpTestCase):
                 test_func(blah);
                 Printf("%d", blah);
             """,
-            stdout="10"
+            stdout="10",
         )
-    
+
     def test_non_byref_complex(self):
         dom = self._test_parse_build(
             "abcd",
@@ -492,8 +684,9 @@ class TestByRef(utils.PfpTestCase):
                 some_struct_t blah;
                 test_func(blah);
             """,
-            stdout="a: 97b: 98c: 99d: 100"
+            stdout="a: 97b: 98c: 99d: 100",
         )
+
 
 if __name__ == "__main__":
     unittest.main()
